@@ -77,14 +77,7 @@
         
         .input-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .input-grid-full {
-            display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -380,11 +373,6 @@
             font-size: 0.75rem;
             color: var(--accent-gold);
             margin-top: 4px;
-            display: none;
-        }
-        
-        .category-note.visible {
-            display: block;
         }
     </style>
 </head>
@@ -407,27 +395,19 @@
                 </div>
                 
                 <div class="input-group">
-                    <label for="currency">Currency / Location</label>
-                    <select id="currency">
-                        <option value="USD">USD - New York ($)</option>
-                        <option value="GBP">GBP - London (£)</option>
-                        <option value="EUR">EUR - Paris (€)</option>
-                        <option value="HKD">HKD - Hong Kong (HK$)</option>
-                        <option value="CHF">CHF - Geneva/Zurich</option>
+                    <label for="location">Location</label>
+                    <select id="location">
+                        <!-- Populated dynamically -->
                     </select>
                 </div>
-            </div>
-            
-            <div class="input-grid-full">
-                <div class="input-group">
-                    <label for="category">Category / Rate Type</label>
+                
+                <div class="input-group" id="category-group" style="display: none;">
+                    <label for="category">Rate Type</label>
                     <select id="category">
-                        <option value="standard">Standard (Live & Online Auctions)</option>
-                        <option value="priority">Priority Bidding (Live Auctions Only)</option>
-                        <option value="watches">Watches</option>
-                        <option value="wine">Wine & Spirits</option>
+                        <option value="standard">Standard</option>
+                        <option value="priority">Priority Bidding</option>
                     </select>
-                    <p class="category-note" id="category-note"></p>
+                    <p class="category-note">Priority Bidding: live auctions only</p>
                 </div>
             </div>
             
@@ -465,22 +445,18 @@
                 <div class="rate-card christies">
                     <h4>Christie's</h4>
                     <ul>
-                        <li><strong>Standard:</strong></li>
                         <li>27% up to threshold 1</li>
                         <li>22% threshold 1 → 2</li>
                         <li>15% above threshold 2</li>
-                        <li style="margin-top: 8px;"><strong>Wine:</strong> 25% flat</li>
                     </ul>
                     <a href="https://www.christies.com/en/help/buying-guide-important-information/financial-information" target="_blank" class="rate-link">View official rates →</a>
                 </div>
                 <div class="rate-card sothebys">
                     <h4>Sotheby's</h4>
                     <ul>
-                        <li><strong>Standard:</strong></li>
                         <li>27% up to threshold 1</li>
                         <li>22% threshold 1 → 2</li>
                         <li>15% above threshold 2</li>
-                        <li style="margin-top: 8px;"><strong>Wine:</strong> 25% (24% + 1%)</li>
                     </ul>
                     <a href="https://www.sothebys.com/en/docs/pdf/242021320-buyers-premium-chart-dec24.pdf" target="_blank" class="rate-link">View official rates (PDF) →</a>
                 </div>
@@ -489,9 +465,8 @@
                     <ul>
                         <li><strong>Standard:</strong> 29% / 22% / 15%</li>
                         <li><strong>Priority:</strong> 25% / 20% / 14%</li>
-                        <li><strong>Watches:</strong> 27% / 21% / 14.5%</li>
                     </ul>
-                    <p class="rate-note">Priority Bidding available for live auctions only</p>
+                    <p class="rate-note">Priority Bidding: live auctions only</p>
                     <a href="https://www.dist.phillips.com/content/web/docs/forms/BuyersPremium.pdf" target="_blank" class="rate-link">View official rates (PDF) →</a>
                 </div>
             </div>
@@ -501,6 +476,39 @@
     </div>
     
     <script>
+        // ===========================================
+        // LOCATION & CURRENCY CONFIGURATION
+        // ===========================================
+        const LOCATIONS = {
+            christies: [
+                { id: 'new_york', name: 'New York', currency: 'USD', symbol: '$' },
+                { id: 'london', name: 'London', currency: 'GBP', symbol: '£' },
+                { id: 'paris', name: 'Paris', currency: 'EUR', symbol: '€' },
+                { id: 'hong_kong', name: 'Hong Kong', currency: 'HKD', symbol: 'HK$' },
+                { id: 'geneva', name: 'Geneva', currency: 'CHF', symbol: 'CHF ' },
+                { id: 'shanghai', name: 'Shanghai', currency: 'CNY', symbol: '¥' },
+                { id: 'dubai', name: 'Dubai', currency: 'USD', symbol: '$' }
+            ],
+            sothebys: [
+                { id: 'new_york', name: 'New York', currency: 'USD', symbol: '$' },
+                { id: 'london', name: 'London', currency: 'GBP', symbol: '£' },
+                { id: 'paris', name: 'Paris', currency: 'EUR', symbol: '€' },
+                { id: 'milan', name: 'Milan', currency: 'EUR', symbol: '€' },
+                { id: 'hong_kong', name: 'Hong Kong', currency: 'HKD', symbol: 'HK$' },
+                { id: 'zurich', name: 'Zurich', currency: 'CHF', symbol: 'CHF ' },
+                { id: 'singapore', name: 'Singapore', currency: 'SGD', symbol: 'S$' },
+                { id: 'dubai', name: 'Dubai', currency: 'USD', symbol: '$' },
+                { id: 'cologne', name: 'Cologne', currency: 'EUR', symbol: '€' }
+            ],
+            phillips: [
+                { id: 'new_york', name: 'New York', currency: 'USD', symbol: '$' },
+                { id: 'london', name: 'London', currency: 'GBP', symbol: '£' },
+                { id: 'paris', name: 'Paris', currency: 'EUR', symbol: '€' },
+                { id: 'hong_kong', name: 'Hong Kong', currency: 'HKD', symbol: 'HK$' },
+                { id: 'geneva', name: 'Geneva', currency: 'CHF', symbol: 'CHF ' }
+            ]
+        };
+
         // ===========================================
         // PREMIUM RATE CONFIGURATION
         // Last updated: February 2025
@@ -512,181 +520,118 @@
                 standard: {
                     rates: [0.27, 0.22, 0.15],
                     thresholds: {
-                        USD: [1500000, 8000000],
-                        GBP: [1000000, 6000000],
-                        EUR: [1200000, 7000000],
-                        HKD: [10000000, 60000000],
-                        CHF: [1200000, 6500000]
-                    }
-                },
-                priority: null, // Christie's doesn't have priority bidding
-                watches: {
-                    // Same as standard for Christie's
-                    rates: [0.27, 0.22, 0.15],
-                    thresholds: {
-                        USD: [1500000, 8000000],
-                        GBP: [1000000, 6000000],
-                        EUR: [1200000, 7000000],
-                        HKD: [10000000, 60000000],
-                        CHF: [1200000, 6500000]
-                    }
-                },
-                wine: {
-                    rates: [0.25],
-                    thresholds: {
-                        USD: [],
-                        GBP: [],
-                        EUR: [],
-                        HKD: [],
-                        CHF: []
+                        new_york: [1500000, 8000000],
+                        london: [1000000, 6000000],
+                        paris: [1200000, 7000000],
+                        hong_kong: [10000000, 60000000],
+                        geneva: [1200000, 6500000],
+                        shanghai: [8500000, 50000000],
+                        dubai: [1500000, 8000000]  // Same as New York (USD)
                     }
                 }
             },
             sothebys: {
                 // As of 17 February 2025
-                // Source: https://www.sothebys.com/en/docs/pdf/242021320-buyers-premium-chart-dec24.pdf
+                // Source: Sotheby's PDF
                 standard: {
                     rates: [0.27, 0.22, 0.15],
                     thresholds: {
-                        USD: [1000000, 8000000],      // New York
-                        GBP: [800000, 6000000],       // London
-                        EUR: [850000, 7000000],       // Paris
-                        HKD: [7500000, 60000000],     // Hong Kong
-                        CHF: [1000000, 8000000]       // Switzerland
-                    }
-                },
-                priority: null, // Sotheby's doesn't have priority bidding
-                watches: {
-                    // Same as standard for Sotheby's
-                    rates: [0.27, 0.22, 0.15],
-                    thresholds: {
-                        USD: [1000000, 8000000],
-                        GBP: [800000, 6000000],
-                        EUR: [850000, 7000000],
-                        HKD: [7500000, 60000000],
-                        CHF: [1000000, 8000000]
-                    }
-                },
-                wine: {
-                    // 24% + 1% overhead = 25% effective
-                    rates: [0.25],
-                    thresholds: {
-                        USD: [],
-                        GBP: [],
-                        EUR: [],
-                        HKD: [],
-                        CHF: []
+                        new_york: [1000000, 8000000],
+                        london: [800000, 6000000],
+                        paris: [850000, 7000000],
+                        milan: [850000, 7000000],       // Same as Paris
+                        hong_kong: [7500000, 60000000],
+                        zurich: [1000000, 8000000],
+                        singapore: [1500000, 10000000],
+                        dubai: [1000000, 8000000],      // Same as New York
+                        cologne: [850000, 7000000]      // Same as Paris
                     }
                 }
             },
             phillips: {
-                // Source: https://www.dist.phillips.com/content/web/docs/forms/BuyersPremium.pdf
+                // Source: Phillips PDF
                 standard: {
                     // Live and timed online auctions
                     rates: [0.29, 0.22, 0.15],
                     thresholds: {
-                        USD: [1000000, 6000000],      // New York
-                        GBP: [800000, 4500000],       // London
-                        EUR: [800000, 4500000],       // Paris
-                        HKD: [7500000, 50000000],     // Hong Kong
-                        CHF: [1000000, 6000000]       // Geneva
+                        new_york: [1000000, 6000000],
+                        london: [800000, 4500000],
+                        paris: [800000, 4500000],
+                        hong_kong: [7500000, 50000000],
+                        geneva: [1000000, 6000000]
                     }
                 },
                 priority: {
                     // Live auctions only - Priority Bidding rates
                     rates: [0.25, 0.20, 0.14],
                     thresholds: {
-                        USD: [1000000, 6000000],
-                        GBP: [800000, 4500000],
-                        EUR: [800000, 4500000],
-                        HKD: [7500000, 50000000],
-                        CHF: [1000000, 6000000]
-                    }
-                },
-                watches: {
-                    // Watch Auctions have different rates
-                    rates: [0.27, 0.21, 0.145],
-                    thresholds: {
-                        USD: [1000000, 6000000],
-                        GBP: [800000, 4500000],
-                        EUR: [800000, 4500000],
-                        HKD: [7500000, 50000000],
-                        CHF: [1000000, 6000000]
-                    }
-                },
-                wine: {
-                    rates: [0.25],
-                    thresholds: {
-                        USD: [],
-                        GBP: [],
-                        EUR: [],
-                        HKD: [],
-                        CHF: []
+                        new_york: [1000000, 6000000],
+                        london: [800000, 4500000],
+                        paris: [800000, 4500000],
+                        hong_kong: [7500000, 50000000],
+                        geneva: [1000000, 6000000]
                     }
                 }
             }
         };
 
-        const CURRENCY_SYMBOLS = {
-            USD: '$',
-            GBP: '£',
-            EUR: '€',
-            HKD: 'HK$',
-            CHF: 'CHF '
-        };
-
-        const CATEGORY_NOTES = {
-            christies: {
-                priority: "Christie's does not offer Priority Bidding rates. Using standard rates.",
-                watches: "Christie's uses standard rates for watch auctions."
-            },
-            sothebys: {
-                priority: "Sotheby's does not offer Priority Bidding rates. Using standard rates.",
-                watches: "Sotheby's uses standard rates for watch auctions."
-            },
-            phillips: {
-                priority: "Priority Bidding rates apply to live auctions only.",
-                watches: "Watch auction rates: 27% / 21% / 14.5%"
-            }
-        };
-
         let lastResults = [];
+        let currentCurrencySymbol = '$';
 
-        function updateCategoryNote() {
+        function updateLocationDropdown() {
             const house = document.getElementById('auction-house').value;
-            const category = document.getElementById('category').value;
-            const noteEl = document.getElementById('category-note');
+            const locationSelect = document.getElementById('location');
+            const locations = LOCATIONS[house];
             
-            const note = CATEGORY_NOTES[house]?.[category];
-            if (note) {
-                noteEl.textContent = note;
-                noteEl.classList.add('visible');
+            // Save current selection if possible
+            const currentValue = locationSelect.value;
+            
+            // Clear and repopulate
+            locationSelect.innerHTML = '';
+            locations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc.id;
+                option.textContent = `${loc.name} (${loc.currency})`;
+                locationSelect.appendChild(option);
+            });
+            
+            // Try to restore selection, otherwise default to first
+            const matchingOption = locations.find(l => l.id === currentValue);
+            if (matchingOption) {
+                locationSelect.value = currentValue;
+            }
+            
+            updateCurrencySymbol();
+        }
+
+        function updateCategoryVisibility() {
+            const house = document.getElementById('auction-house').value;
+            const categoryGroup = document.getElementById('category-group');
+            const categorySelect = document.getElementById('category');
+            
+            if (house === 'phillips') {
+                categoryGroup.style.display = 'flex';
             } else {
-                noteEl.classList.remove('visible');
+                categoryGroup.style.display = 'none';
+                categorySelect.value = 'standard';
             }
         }
 
-        function getEffectiveCategory(house, category) {
-            // If the house doesn't have this category, fall back to standard
-            if (!PREMIUM_RATES[house][category]) {
-                return 'standard';
-            }
-            return category;
+        function updateCurrencySymbol() {
+            const house = document.getElementById('auction-house').value;
+            const locationId = document.getElementById('location').value;
+            const location = LOCATIONS[house].find(l => l.id === locationId);
+            currentCurrencySymbol = location ? location.symbol : '$';
         }
 
-        function calculatePremium(amount, house, currency, category) {
-            const effectiveCategory = getEffectiveCategory(house, category);
+        function calculatePremium(amount, house, locationId, category) {
+            const effectiveCategory = PREMIUM_RATES[house][category] ? category : 'standard';
             const config = PREMIUM_RATES[house][effectiveCategory];
-            const thresholds = config.thresholds[currency];
+            const thresholds = config.thresholds[locationId];
             const rates = config.rates;
             
             let premium = 0;
             let remaining = amount;
-            
-            if (thresholds.length === 0) {
-                // Single rate (e.g., wine)
-                return amount * rates[0];
-            }
             
             // Tier 1: 0 to threshold[0]
             const tier1Max = thresholds[0];
@@ -694,7 +639,7 @@
             premium += tier1Amount * rates[0];
             remaining -= tier1Amount;
             
-            if (remaining > 0 && thresholds.length > 0) {
+            if (remaining > 0) {
                 // Tier 2: threshold[0] to threshold[1]
                 const tier2Max = thresholds[1] - thresholds[0];
                 const tier2Amount = Math.min(remaining, tier2Max);
@@ -702,7 +647,7 @@
                 remaining -= tier2Amount;
             }
             
-            if (remaining > 0 && thresholds.length > 1) {
+            if (remaining > 0) {
                 // Tier 3: above threshold[1]
                 premium += remaining * rates[2];
             }
@@ -710,9 +655,8 @@
             return premium;
         }
 
-        function formatCurrency(amount, currency) {
-            const symbol = CURRENCY_SYMBOLS[currency];
-            return symbol + amount.toLocaleString('en-US', {
+        function formatCurrency(amount) {
+            return currentCurrencySymbol + amount.toLocaleString('en-US', {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             });
@@ -720,9 +664,11 @@
 
         function calculate() {
             const house = document.getElementById('auction-house').value;
-            const currency = document.getElementById('currency').value;
+            const locationId = document.getElementById('location').value;
             const category = document.getElementById('category').value;
             const amountsText = document.getElementById('amounts').value;
+            
+            updateCurrencySymbol();
             
             // Parse amounts (handle commas, spaces, newlines)
             const amounts = amountsText
@@ -743,7 +689,7 @@
             let totalPremium = 0;
             
             amounts.forEach(amount => {
-                const premium = calculatePremium(amount, house, currency, category);
+                const premium = calculatePremium(amount, house, locationId, category);
                 const total = amount + premium;
                 const effectiveRate = (premium / amount * 100).toFixed(2);
                 
@@ -759,10 +705,10 @@
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="amount">${formatCurrency(amount, currency)}</td>
-                    <td class="premium">${formatCurrency(premium, currency)}</td>
+                    <td class="amount">${formatCurrency(amount)}</td>
+                    <td class="premium">${formatCurrency(premium)}</td>
                     <td>${effectiveRate}%</td>
-                    <td class="total">${formatCurrency(total, currency)}</td>
+                    <td class="total">${formatCurrency(total)}</td>
                 `;
                 resultsBody.appendChild(row);
             });
@@ -775,10 +721,10 @@
                 const summaryRow = document.createElement('tr');
                 summaryRow.className = 'summary-row';
                 summaryRow.innerHTML = `
-                    <td class="amount"><strong>TOTAL</strong><br>${formatCurrency(totalHammer, currency)}</td>
-                    <td class="premium">${formatCurrency(totalPremium, currency)}</td>
+                    <td class="amount"><strong>TOTAL</strong><br>${formatCurrency(totalHammer)}</td>
+                    <td class="premium">${formatCurrency(totalPremium)}</td>
                     <td>${avgRate}% avg</td>
-                    <td class="total">${formatCurrency(grandTotal, currency)}</td>
+                    <td class="total">${formatCurrency(grandTotal)}</td>
                 `;
                 resultsBody.appendChild(summaryRow);
                 
@@ -798,21 +744,23 @@
         }
 
         function copyResults() {
-            const currency = document.getElementById('currency').value;
             const house = document.getElementById('auction-house').value;
+            const locationId = document.getElementById('location').value;
             const category = document.getElementById('category').value;
             const houseName = house === 'christies' ? "Christie's" : house === 'sothebys' ? "Sotheby's" : "Phillips";
-            const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+            const location = LOCATIONS[house].find(l => l.id === locationId);
+            const locationName = location ? location.name : '';
+            const categoryName = category === 'priority' ? ' (Priority Bidding)' : '';
             
-            let text = `${houseName} Buyer's Premium - ${categoryName} (${currency})\n`;
+            let text = `${houseName} - ${locationName}${categoryName}\n`;
             text += '─'.repeat(55) + '\n';
             text += 'Hammer Price\t\tPremium\t\tRate\tTotal\n';
             text += '─'.repeat(55) + '\n';
             
             lastResults.forEach(r => {
-                const hammerStr = formatCurrency(r.hammer, currency);
-                const premiumStr = formatCurrency(r.premium, currency);
-                const totalStr = formatCurrency(r.total, currency);
+                const hammerStr = formatCurrency(r.hammer);
+                const premiumStr = formatCurrency(r.premium);
+                const totalStr = formatCurrency(r.total);
                 
                 if (r.isTotal) {
                     text += '─'.repeat(55) + '\n';
@@ -841,26 +789,28 @@
             }
         });
 
-        // Update category note and auto-calculate on dropdown change
+        // Update dropdowns and auto-calculate on changes
         document.getElementById('auction-house').addEventListener('change', () => {
-            updateCategoryNote();
+            updateLocationDropdown();
+            updateCategoryVisibility();
+            const amounts = document.getElementById('amounts').value.trim();
+            if (amounts) calculate();
+        });
+        
+        document.getElementById('location').addEventListener('change', () => {
+            updateCurrencySymbol();
             const amounts = document.getElementById('amounts').value.trim();
             if (amounts) calculate();
         });
         
         document.getElementById('category').addEventListener('change', () => {
-            updateCategoryNote();
-            const amounts = document.getElementById('amounts').value.trim();
-            if (amounts) calculate();
-        });
-        
-        document.getElementById('currency').addEventListener('change', () => {
             const amounts = document.getElementById('amounts').value.trim();
             if (amounts) calculate();
         });
 
         // Initialize
-        updateCategoryNote();
+        updateLocationDropdown();
+        updateCategoryVisibility();
     </script>
 </body>
 </html>
