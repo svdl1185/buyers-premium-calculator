@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction Buyer's Premium Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a1f;
+            --bg-card: #232329;
+            --accent-gold: #c9a962;
+            --accent-gold-light: #e4d4a8;
+            --text-primary: #f5f5f5;
+            --text-secondary: #9a9a9a;
+            --border-subtle: #3a3a42;
+            --christies-color: #b8372b;
+            --sothebys-color: #0033a0;
+            --phillips-color: #000000;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 20% 0%, rgba(201, 169, 98, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(201, 169, 98, 0.05) 0%, transparent 50%);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.8rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-gold-light), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        .calculator-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 700px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .calculator-card {
+                padding: 24px;
+            }
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+        }
+        
+        select, input[type="text"] {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.15);
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239a9a9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        .amounts-section {
+            margin-bottom: 30px;
+        }
+        
+        .amounts-section label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.15);
+        }
+        
+        .hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-gold), #b8943d);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            padding: 16px 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(201, 169, 98, 0.25);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            margin-top: 40px;
+        }
+        
+        .results h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--accent-gold-light);
+        }
+        
+        .results-table-wrapper {
+            overflow-x: auto;
+        }
+        
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+        
+        .result-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .result-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .result-table .amount {
+            font-weight: 500;
+        }
+        
+        .result-table .premium {
+            color: var(--accent-gold);
+        }
+        
+        .result-table .total {
+            font-weight: 600;
+            color: var(--accent-gold-light);
+        }
+        
+        .summary-row {
+            background: rgba(201, 169, 98, 0.1);
+        }
+        
+        .summary-row td {
+            font-weight: 600;
+            border-top: 2px solid var(--accent-gold);
+        }
+        
+        .rates-info {
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(201, 169, 98, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+        }
+        
+        .rates-info h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--accent-gold-light);
+        }
+        
+        .rates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .rate-card {
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+        
+        .rate-card h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rate-card h4::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+        
+        .rate-card.christies h4::before { background: var(--christies-color); }
+        .rate-card.sothebys h4::before { background: var(--sothebys-color); }
+        .rate-card.phillips h4::before { background: var(--text-primary); }
+        
+        .rate-card ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .rate-card li {
+            padding: 4px 0;
+        }
+        
+        .rate-card .rate-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .rate-card .rate-link:hover {
+            color: var(--accent-gold-light);
+            text-decoration: underline;
+        }
+        
+        .last-updated {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            width: auto;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .copy-btn.copied {
+            border-color: #4ade80;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Buyer's Premium Calculator</h1>
+            <p class="subtitle">Christie's · Sotheby's · Phillips</p>
+        </header>
+        
+        <div class="calculator-card">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="auction-house">Auction House</label>
+                    <select id="auction-house">
+                        <option value="christies">Christie's</option>
+                        <option value="sothebys">Sotheby's</option>
+                        <option value="phillips">Phillips</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="currency">Currency</label>
+                    <select id="currency">
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="HKD">HKD (HK$)</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="category">Category</label>
+                    <select id="category">
+                        <option value="standard">Standard</option>
+                        <option value="wine">Wine</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="amounts-section">
+                <label for="amounts">Hammer Prices</label>
+                <textarea id="amounts" placeholder="Enter amounts, one per line or comma-separated&#10;e.g., 50000, 150000, 500000"></textarea>
+                <p class="hint">Enter multiple amounts separated by commas, spaces, or new lines. Press Ctrl+Enter to calculate.</p>
+            </div>
+            
+            <button onclick="calculate()">Calculate Premiums</button>
+            
+            <div class="results" id="results" style="display: none;">
+                <h2>Results</h2>
+                <div class="results-table-wrapper">
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>Hammer Price</th>
+                                <th>Buyer's Premium</th>
+                                <th>Premium %</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="copy-btn" onclick="copyResults()">Copy to Clipboard</button>
+            </div>
+        </div>
+        
+        <div class="rates-info">
+            <h3>Current Premium Rates</h3>
+            <div class="rates-grid">
+                <div class="rate-card christies">
+                    <h4>Christie's</h4>
+                    <ul>
+                        <li>27% up to threshold 1</li>
+                        <li>22% threshold 1 → 2</li>
+                        <li>15% above threshold 2</li>
+                    </ul>
+                    <a href="https://www.christies.com/en/help/buying-guide-important-information/financial-information" target="_blank" class="rate-link">View official rates →</a>
+                </div>
+                <div class="rate-card sothebys">
+                    <h4>Sotheby's</h4>
+                    <ul>
+                        <li>27% up to threshold 1</li>
+                        <li>21% threshold 1 → 2</li>
+                        <li>14.5% above threshold 2</li>
+                    </ul>
+                    <a href="https://www.sothebys.com/en/docs/pdf/242021320-buyers-premium-chart-dec24.pdf" target="_blank" class="rate-link">View official rates (PDF) →</a>
+                </div>
+                <div class="rate-card phillips">
+                    <h4>Phillips</h4>
+                    <ul>
+                        <li>27% up to threshold 1</li>
+                        <li>21% threshold 1 → 2</li>
+                        <li>14.5% above threshold 2</li>
+                    </ul>
+                    <a href="https://www.dist.phillips.com/content/web/docs/forms/BuyersPremium.pdf" target="_blank" class="rate-link">View official rates (PDF) →</a>
+                </div>
+            </div>
+        </div>
+        
+        <p class="last-updated">Last rate update: January 2026 · Always verify with official sources before transactions</p>
+    </div>
+    
+    <script>
+        // ===========================================
+        // PREMIUM RATE CONFIGURATION
+        // Update these when rates change
+        // ===========================================
+        const PREMIUM_RATES = {
+            christies: {
+                // Effective September 1, 2025
+                // Source: https://www.christies.com/en/help/buying-guide-important-information/financial-information
+                standard: {
+                    rates: [0.27, 0.22, 0.15],
+                    thresholds: {
+                        USD: [1500000, 8000000],
+                        GBP: [1000000, 6000000],
+                        EUR: [1200000, 7000000],
+                        HKD: [10000000, 60000000],
+                        CHF: [1200000, 6500000]
+                    }
+                },
+                wine: {
+                    rates: [0.25],
+                    thresholds: {
+                        USD: [],
+                        GBP: [],
+                        EUR: [],
+                        HKD: [],
+                        CHF: []
+                    }
+                }
+            },
+            sothebys: {
+                // VERIFY WITH PDF: https://www.sothebys.com/en/docs/pdf/242021320-buyers-premium-chart-dec24.pdf
+                // These are estimated rates - please verify and update
+                standard: {
+                    rates: [0.27, 0.21, 0.145],
+                    thresholds: {
+                        USD: [1000000, 6000000],
+                        GBP: [700000, 4500000],
+                        EUR: [900000, 5500000],
+                        HKD: [8000000, 48000000],
+                        CHF: [900000, 5500000]
+                    }
+                },
+                wine: {
+                    rates: [0.25],
+                    thresholds: {
+                        USD: [],
+                        GBP: [],
+                        EUR: [],
+                        HKD: [],
+                        CHF: []
+                    }
+                }
+            },
+            phillips: {
+                // VERIFY WITH PDF: https://www.dist.phillips.com/content/web/docs/forms/BuyersPremium.pdf
+                // These are estimated rates - please verify and update
+                standard: {
+                    rates: [0.27, 0.21, 0.145],
+                    thresholds: {
+                        USD: [1000000, 6000000],
+                        GBP: [700000, 4500000],
+                        EUR: [900000, 5500000],
+                        HKD: [8000000, 48000000],
+                        CHF: [900000, 5500000]
+                    }
+                },
+                wine: {
+                    rates: [0.26],
+                    thresholds: {
+                        USD: [],
+                        GBP: [],
+                        EUR: [],
+                        HKD: [],
+                        CHF: []
+                    }
+                }
+            }
+        };
+
+        const CURRENCY_SYMBOLS = {
+            USD: '$',
+            GBP: '£',
+            EUR: '€',
+            HKD: 'HK$',
+            CHF: 'CHF '
+        };
+
+        let lastResults = [];
+
+        function calculatePremium(amount, house, currency, category) {
+            const config = PREMIUM_RATES[house][category];
+            const thresholds = config.thresholds[currency];
+            const rates = config.rates;
+            
+            let premium = 0;
+            let remaining = amount;
+            
+            if (thresholds.length === 0) {
+                // Single rate (e.g., wine)
+                return amount * rates[0];
+            }
+            
+            // Tier 1: 0 to threshold[0]
+            const tier1Max = thresholds[0];
+            const tier1Amount = Math.min(remaining, tier1Max);
+            premium += tier1Amount * rates[0];
+            remaining -= tier1Amount;
+            
+            if (remaining > 0 && thresholds.length > 0) {
+                // Tier 2: threshold[0] to threshold[1]
+                const tier2Max = thresholds[1] - thresholds[0];
+                const tier2Amount = Math.min(remaining, tier2Max);
+                premium += tier2Amount * rates[1];
+                remaining -= tier2Amount;
+            }
+            
+            if (remaining > 0 && thresholds.length > 1) {
+                // Tier 3: above threshold[1]
+                premium += remaining * rates[2];
+            }
+            
+            return premium;
+        }
+
+        function formatCurrency(amount, currency) {
+            const symbol = CURRENCY_SYMBOLS[currency];
+            return symbol + amount.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        function calculate() {
+            const house = document.getElementById('auction-house').value;
+            const currency = document.getElementById('currency').value;
+            const category = document.getElementById('category').value;
+            const amountsText = document.getElementById('amounts').value;
+            
+            // Parse amounts (handle commas, spaces, newlines)
+            const amounts = amountsText
+                .split(/[\s,\n]+/)
+                .map(s => parseFloat(s.replace(/[^0-9.]/g, '')))
+                .filter(n => !isNaN(n) && n > 0);
+            
+            if (amounts.length === 0) {
+                alert('Please enter at least one valid amount');
+                return;
+            }
+            
+            const resultsBody = document.getElementById('results-body');
+            resultsBody.innerHTML = '';
+            lastResults = [];
+            
+            let totalHammer = 0;
+            let totalPremium = 0;
+            
+            amounts.forEach(amount => {
+                const premium = calculatePremium(amount, house, currency, category);
+                const total = amount + premium;
+                const effectiveRate = (premium / amount * 100).toFixed(2);
+                
+                totalHammer += amount;
+                totalPremium += premium;
+                
+                lastResults.push({
+                    hammer: amount,
+                    premium: premium,
+                    rate: effectiveRate,
+                    total: total
+                });
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="amount">${formatCurrency(amount, currency)}</td>
+                    <td class="premium">${formatCurrency(premium, currency)}</td>
+                    <td>${effectiveRate}%</td>
+                    <td class="total">${formatCurrency(total, currency)}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+            
+            // Add summary row if multiple amounts
+            if (amounts.length > 1) {
+                const grandTotal = totalHammer + totalPremium;
+                const avgRate = (totalPremium / totalHammer * 100).toFixed(2);
+                
+                const summaryRow = document.createElement('tr');
+                summaryRow.className = 'summary-row';
+                summaryRow.innerHTML = `
+                    <td class="amount"><strong>TOTAL</strong><br>${formatCurrency(totalHammer, currency)}</td>
+                    <td class="premium">${formatCurrency(totalPremium, currency)}</td>
+                    <td>${avgRate}% avg</td>
+                    <td class="total">${formatCurrency(grandTotal, currency)}</td>
+                `;
+                resultsBody.appendChild(summaryRow);
+                
+                lastResults.push({
+                    hammer: totalHammer,
+                    premium: totalPremium,
+                    rate: avgRate,
+                    total: grandTotal,
+                    isTotal: true
+                });
+            }
+            
+            document.getElementById('results').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyResults() {
+            const currency = document.getElementById('currency').value;
+            const house = document.getElementById('auction-house').value;
+            const houseName = house === 'christies' ? "Christie's" : house === 'sothebys' ? "Sotheby's" : "Phillips";
+            
+            let text = `${houseName} Buyer's Premium Calculation (${currency})\n`;
+            text += '─'.repeat(50) + '\n';
+            text += 'Hammer Price\tPremium\t\tRate\tTotal\n';
+            text += '─'.repeat(50) + '\n';
+            
+            lastResults.forEach(r => {
+                const hammerStr = formatCurrency(r.hammer, currency);
+                const premiumStr = formatCurrency(r.premium, currency);
+                const totalStr = formatCurrency(r.total, currency);
+                
+                if (r.isTotal) {
+                    text += '─'.repeat(50) + '\n';
+                    text += `TOTAL: ${hammerStr}\t${premiumStr}\t${r.rate}%\t${totalStr}\n`;
+                } else {
+                    text += `${hammerStr}\t${premiumStr}\t${r.rate}%\t${totalStr}\n`;
+                }
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy to Clipboard';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Calculate on Ctrl+Enter key in textarea
+        document.getElementById('amounts').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                calculate();
+            }
+        });
+
+        // Auto-calculate on dropdown change if there are amounts
+        ['auction-house', 'currency', 'category'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                const amounts = document.getElementById('amounts').value.trim();
+                if (amounts) {
+                    calculate();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
