@@ -563,6 +563,7 @@
                                 <th>Hammer Price</th>
                                 <th>Buyer's Premium</th>
                                 <th>Premium %</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="results-body">
@@ -913,12 +914,14 @@
 
             amounts.forEach(amount => {
                 const premium = calculatePremium(amount, house, locationId, category);
+                const total = amount + premium;
                 const effectiveRate = (premium / amount * 100).toFixed(2);
 
                 lastResults.push({
                     hammer: amount,
                     premium: premium,
-                    rate: effectiveRate
+                    rate: effectiveRate,
+                    total: total
                 });
                 
                 const row = document.createElement('tr');
@@ -926,6 +929,7 @@
                     <td class="amount">${formatCurrency(amount)}</td>
                     <td class="premium">${formatCurrency(premium)}</td>
                     <td>${effectiveRate}%</td>
+                    <td class="total">${formatCurrency(total)}</td>
                 `;
                 resultsBody.appendChild(row);
             });
@@ -947,13 +951,14 @@
             
             let text = `${houseName} - ${locationName}${categoryName}\n`;
             text += '─'.repeat(55) + '\n';
-            text += 'Hammer Price\t\tPremium\t\tRate\n';
+            text += 'Hammer Price\t\tPremium\t\tRate\tTotal\n';
             text += '─'.repeat(55) + '\n';
             
             lastResults.forEach(r => {
                 const hammerStr = formatCurrency(r.hammer);
                 const premiumStr = formatCurrency(r.premium);
-                text += `${hammerStr}\t\t${premiumStr}\t${r.rate}%\n`;
+                const totalStr = formatCurrency(r.total);
+                text += `${hammerStr}\t\t${premiumStr}\t${r.rate}%\t${totalStr}\n`;
             });
             
             navigator.clipboard.writeText(text).then(() => {
