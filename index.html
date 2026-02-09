@@ -210,6 +210,23 @@
         .results-table-wrapper {
             overflow-x: auto;
         }
+
+        .increments-section {
+            margin-top: 30px;
+        }
+
+        .increments-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .increments-grid {
+                grid-template-columns: 1fr;
+            }
+        }
         
         .result-table {
             width: 100%;
@@ -546,7 +563,6 @@
                                 <th>Hammer Price</th>
                                 <th>Buyer's Premium</th>
                                 <th>Premium %</th>
-                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="results-body">
@@ -555,6 +571,48 @@
                 </div>
                 <button class="copy-btn" onclick="copyResults()">Copy to Clipboard</button>
             </div>
+
+    <div class="increments-section">
+        <h2>Increment Helper</h2>
+        <p class="hint">See how the buyer's premium changes over a series of price increments.</p>
+        <div class="increments-grid">
+            <div class="input-group">
+                <label for="increment-base">Starting Hammer Price</label>
+                <input type="text" id="increment-base" placeholder="e.g., 100000">
+            </div>
+            <div class="input-group">
+                <label for="increment-value">Increment</label>
+                <input type="text" id="increment-value" placeholder="e.g., 5000 or 5">
+                <select id="increment-type" style="margin-top: 8px;">
+                    <option value="amount">Amount</option>
+                    <option value="percent">Percent</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="increment-steps">Number of Increments</label>
+                <input type="text" id="increment-steps" placeholder="e.g., 5">
+            </div>
+        </div>
+        <button onclick="generateIncrements()">Generate Increment Steps</button>
+
+        <div class="results" id="increment-results" style="display: none; margin-top: 24px;">
+            <h2>Increment Results</h2>
+            <div class="results-table-wrapper">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>Step</th>
+                            <th>Hammer Price</th>
+                            <th>Buyer's Premium</th>
+                            <th>Premium %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="increment-results-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
         </div>
         
         <div class="rates-info">
@@ -744,6 +802,7 @@
 
         let lastResults = [];
         let currentCurrencySymbol = '$';
+        let lastIncrementResults = [];
 
         function updateLocationDropdown() {
             const house = document.getElementById('auction-house').value;
@@ -851,23 +910,15 @@
             const resultsBody = document.getElementById('results-body');
             resultsBody.innerHTML = '';
             lastResults = [];
-            
-            let totalHammer = 0;
-            let totalPremium = 0;
-            
+
             amounts.forEach(amount => {
                 const premium = calculatePremium(amount, house, locationId, category);
-                const total = amount + premium;
                 const effectiveRate = (premium / amount * 100).toFixed(2);
-                
-                totalHammer += amount;
-                totalPremium += premium;
-                
+
                 lastResults.push({
                     hammer: amount,
                     premium: premium,
-                    rate: effectiveRate,
-                    total: total
+                    rate: effectiveRate
                 });
                 
                 const row = document.createElement('tr');
@@ -875,34 +926,9 @@
                     <td class="amount">${formatCurrency(amount)}</td>
                     <td class="premium">${formatCurrency(premium)}</td>
                     <td>${effectiveRate}%</td>
-                    <td class="total">${formatCurrency(total)}</td>
                 `;
                 resultsBody.appendChild(row);
             });
-            
-            // Add summary row if multiple amounts
-            if (amounts.length > 1) {
-                const grandTotal = totalHammer + totalPremium;
-                const avgRate = (totalPremium / totalHammer * 100).toFixed(2);
-                
-                const summaryRow = document.createElement('tr');
-                summaryRow.className = 'summary-row';
-                summaryRow.innerHTML = `
-                    <td class="amount"><strong>TOTAL</strong><br>${formatCurrency(totalHammer)}</td>
-                    <td class="premium">${formatCurrency(totalPremium)}</td>
-                    <td>${avgRate}% avg</td>
-                    <td class="total">${formatCurrency(grandTotal)}</td>
-                `;
-                resultsBody.appendChild(summaryRow);
-                
-                lastResults.push({
-                    hammer: totalHammer,
-                    premium: totalPremium,
-                    rate: avgRate,
-                    total: grandTotal,
-                    isTotal: true
-                });
-            }
             
             document.getElementById('results').style.display = 'block';
             
@@ -921,20 +947,13 @@
             
             let text = `${houseName} - ${locationName}${categoryName}\n`;
             text += '─'.repeat(55) + '\n';
-            text += 'Hammer Price\t\tPremium\t\tRate\tTotal\n';
+            text += 'Hammer Price\t\tPremium\t\tRate\n';
             text += '─'.repeat(55) + '\n';
             
             lastResults.forEach(r => {
                 const hammerStr = formatCurrency(r.hammer);
                 const premiumStr = formatCurrency(r.premium);
-                const totalStr = formatCurrency(r.total);
-                
-                if (r.isTotal) {
-                    text += '─'.repeat(55) + '\n';
-                    text += `TOTAL: ${hammerStr}\t${premiumStr}\t${r.rate}%\t${totalStr}\n`;
-                } else {
-                    text += `${hammerStr}\t\t${premiumStr}\t${r.rate}%\t${totalStr}\n`;
-                }
+                text += `${hammerStr}\t\t${premiumStr}\t${r.rate}%\n`;
             });
             
             navigator.clipboard.writeText(text).then(() => {
@@ -946,6 +965,90 @@
                     btn.classList.remove('copied');
                 }, 2000);
             });
+        }
+
+        function generateIncrements() {
+            const house = document.getElementById('auction-house').value;
+            const locationId = document.getElementById('location').value;
+            const category = document.getElementById('category').value;
+            const baseText = document.getElementById('increment-base').value;
+            const incrementText = document.getElementById('increment-value').value;
+            const stepsText = document.getElementById('increment-steps').value;
+            const incrementType = document.getElementById('increment-type').value;
+
+            updateCurrencySymbol();
+
+            const baseAmount = parseFloat(baseText.replace(/[^0-9.]/g, ''));
+            const incrementValue = parseFloat(incrementText.replace(/[^0-9.]/g, ''));
+            const steps = parseInt(stepsText.replace(/[^0-9]/g, ''), 10);
+
+            if (isNaN(baseAmount) || baseAmount <= 0) {
+                alert('Please enter a valid starting hammer price for increments.');
+                return;
+            }
+            if (isNaN(incrementValue) || incrementValue <= 0) {
+                alert('Please enter a valid increment (amount or percent).');
+                return;
+            }
+            if (isNaN(steps) || steps <= 0) {
+                alert('Please enter a valid number of increments.');
+                return;
+            }
+
+            const tbody = document.getElementById('increment-results-body');
+            tbody.innerHTML = '';
+            lastIncrementResults = [];
+
+            let currentHammer = baseAmount;
+
+            // Step 0: base amount
+            const basePremium = calculatePremium(currentHammer, house, locationId, category);
+            const baseRate = (basePremium / currentHammer * 100).toFixed(2);
+            lastIncrementResults.push({
+                step: 0,
+                hammer: currentHammer,
+                premium: basePremium,
+                rate: baseRate
+            });
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td>0 (Base)</td>
+                <td class="amount">${formatCurrency(currentHammer)}</td>
+                <td class="premium">${formatCurrency(basePremium)}</td>
+                <td>${baseRate}%</td>
+            `;
+            tbody.appendChild(row);
+
+            // Next steps
+            for (let i = 1; i <= steps; i++) {
+                if (incrementType === 'amount') {
+                    currentHammer += incrementValue;
+                } else {
+                    currentHammer = currentHammer * (1 + incrementValue / 100);
+                }
+
+                const premium = calculatePremium(currentHammer, house, locationId, category);
+                const rate = (premium / currentHammer * 100).toFixed(2);
+
+                lastIncrementResults.push({
+                    step: i,
+                    hammer: currentHammer,
+                    premium: premium,
+                    rate: rate
+                });
+
+                const stepRow = document.createElement('tr');
+                stepRow.innerHTML = `
+                    <td>${i}</td>
+                    <td class="amount">${formatCurrency(currentHammer)}</td>
+                    <td class="premium">${formatCurrency(premium)}</td>
+                    <td>${rate}%</td>
+                `;
+                tbody.appendChild(stepRow);
+            }
+
+            document.getElementById('increment-results').style.display = 'block';
+            document.getElementById('increment-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         // Calculate on Ctrl+Enter key in textarea
