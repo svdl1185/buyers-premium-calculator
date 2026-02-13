@@ -392,6 +392,50 @@
             margin-top: 4px;
         }
         
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 24px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        
+        .mode-toggle .toggle-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            width: auto;
+        }
+        
+        .mode-toggle .toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent-gold), #b8943d);
+            color: var(--bg-dark);
+            font-weight: 600;
+        }
+        
+        .mode-toggle .toggle-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+        
+        .mode-toggle .toggle-btn:hover,
+        .mode-toggle .toggle-btn:active {
+            transform: none;
+            box-shadow: none;
+        }
+        
         /* Password Screen */
         .password-overlay {
             position: fixed;
@@ -546,10 +590,15 @@
                 </div>
             </div>
             
+            <div class="mode-toggle">
+                <button class="toggle-btn active" id="mode-hammer" onclick="setMode('hammer')">From Hammer Price</button>
+                <button class="toggle-btn" id="mode-total" onclick="setMode('total')">From Total Price</button>
+            </div>
+            
             <div class="amounts-section">
-                <label for="amounts">Hammer Prices</label>
+                <label for="amounts" id="amounts-label">Hammer Prices</label>
                 <textarea id="amounts" placeholder="Enter amounts, one per line or comma-separated&#10;e.g., 50000, 150000, 500000"></textarea>
-                <p class="hint">Enter multiple amounts separated by commas, spaces, or new lines. Press Ctrl+Enter to calculate.</p>
+                <p class="hint" id="amounts-hint">Enter multiple amounts separated by commas, spaces, or new lines. Press Ctrl+Enter to calculate.</p>
             </div>
             
             <button onclick="calculate()">Calculate Premiums</button>
@@ -804,6 +853,7 @@
         let lastResults = [];
         let currentCurrencySymbol = '$';
         let lastIncrementResults = [];
+        let calculationMode = 'hammer';
 
         function updateLocationDropdown() {
             const house = document.getElementById('auction-house').value;
@@ -882,6 +932,65 @@
             return premium;
         }
 
+        function reverseCalculateHammer(total, house, locationId, category) {
+            const effectiveCategory = PREMIUM_RATES[house][category] ? category : 'standard';
+            const config = PREMIUM_RATES[house][effectiveCategory];
+            const thresholds = config.thresholds[locationId];
+            const rates = config.rates;
+            
+            const t1 = thresholds[0];
+            const t2 = thresholds[1];
+            const r1 = rates[0];
+            const r2 = rates[1];
+            const r3 = rates[2];
+            
+            // Max total at each tier boundary
+            const maxTotalTier1 = t1 * (1 + r1);
+            const maxTotalTier2 = t2 + t1 * r1 + (t2 - t1) * r2;
+            
+            let hammer;
+            
+            if (total <= maxTotalTier1) {
+                // Hammer falls within tier 1
+                hammer = total / (1 + r1);
+            } else if (total <= maxTotalTier2) {
+                // Hammer falls within tier 2
+                hammer = (total - t1 * (r1 - r2)) / (1 + r2);
+            } else {
+                // Hammer falls within tier 3
+                hammer = (total - t1 * (r1 - r2) - t2 * (r2 - r3)) / (1 + r3);
+            }
+            
+            return Math.max(0, hammer);
+        }
+
+        function setMode(mode) {
+            calculationMode = mode;
+            
+            // Update toggle buttons
+            document.getElementById('mode-hammer').classList.toggle('active', mode === 'hammer');
+            document.getElementById('mode-total').classList.toggle('active', mode === 'total');
+            
+            // Update labels and placeholders
+            const amountsLabel = document.getElementById('amounts-label');
+            const amountsTextarea = document.getElementById('amounts');
+            const hint = document.getElementById('amounts-hint');
+            
+            if (mode === 'hammer') {
+                amountsLabel.textContent = 'Hammer Prices';
+                amountsTextarea.placeholder = 'Enter amounts, one per line or comma-separated\ne.g., 50000, 150000, 500000';
+                hint.textContent = 'Enter multiple amounts separated by commas, spaces, or new lines. Press Ctrl+Enter to calculate.';
+            } else {
+                amountsLabel.textContent = 'Total Prices (incl. Premium)';
+                amountsTextarea.placeholder = 'Enter total prices, one per line or comma-separated\ne.g., 63500, 185000, 575000';
+                hint.textContent = 'Enter the total price(s) you want to pay. We\'ll back-calculate the hammer price and premium. Press Ctrl+Enter to calculate.';
+            }
+            
+            // Auto-recalculate if there are values
+            const amounts = document.getElementById('amounts').value.trim();
+            if (amounts) calculate();
+        }
+
         function formatCurrency(amount) {
             return currentCurrencySymbol + amount.toLocaleString('en-US', {
                 minimumFractionDigits: 0,
@@ -912,13 +1021,24 @@
             resultsBody.innerHTML = '';
             lastResults = [];
 
-            amounts.forEach(amount => {
-                const premium = calculatePremium(amount, house, locationId, category);
-                const total = amount + premium;
-                const effectiveRate = (premium / amount * 100).toFixed(2);
+            amounts.forEach(inputAmount => {
+                let hammer, premium, total;
+                
+                if (calculationMode === 'hammer') {
+                    hammer = inputAmount;
+                    premium = calculatePremium(hammer, house, locationId, category);
+                    total = hammer + premium;
+                } else {
+                    // Reverse: user entered the total, back-calculate hammer
+                    total = inputAmount;
+                    hammer = reverseCalculateHammer(total, house, locationId, category);
+                    premium = total - hammer;
+                }
+                
+                const effectiveRate = hammer > 0 ? (premium / hammer * 100).toFixed(2) : '0.00';
 
                 lastResults.push({
-                    hammer: amount,
+                    hammer: hammer,
                     premium: premium,
                     rate: effectiveRate,
                     total: total
@@ -926,7 +1046,7 @@
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="amount">${formatCurrency(amount)}</td>
+                    <td class="amount">${formatCurrency(hammer)}</td>
                     <td class="premium">${formatCurrency(premium)}</td>
                     <td>${effectiveRate}%</td>
                     <td class="total">${formatCurrency(total)}</td>
