@@ -675,16 +675,18 @@
                         <li>22% threshold 1 → 2</li>
                         <li>15% above threshold 2</li>
                     </ul>
+                    <p class="rate-note">Effective 1 September 2025</p>
                     <a href="https://www.christies.com/en/help/buying-guide-important-information/financial-information" target="_blank" class="rate-link">View official rates →</a>
                 </div>
                 <div class="rate-card sothebys">
                     <h4>Sotheby's</h4>
                     <ul>
-                        <li>27% up to threshold 1</li>
+                        <li>28% up to threshold 1</li>
                         <li>22% threshold 1 → 2</li>
                         <li>15% above threshold 2</li>
                     </ul>
-                    <a href="https://www.sothebys.com/en/docs/pdf/242021320-buyers-premium-chart-dec24.pdf" target="_blank" class="rate-link">View official rates (PDF) →</a>
+                    <p class="rate-note">Rates as of 13 February 2026</p>
+                    <a href="https://www.sothebys.com/en/docs/pdf/st-262561601-bp-chart-pdf-updates-feb-4.pdf?locale=en" target="_blank" class="rate-link">View official rates (PDF) →</a>
                 </div>
                 <div class="rate-card phillips">
                     <h4>Phillips</h4>
@@ -698,7 +700,7 @@
             </div>
         </div>
         
-        <p class="last-updated">Rates as of February 2025 · Always verify with official sources before transactions</p>
+        <p class="last-updated">Last updated: February 2026 · Always verify with official sources before transactions</p>
     </div>
     </div> <!-- End main-content -->
     
@@ -773,6 +775,7 @@
                 { id: 'zurich', name: 'Zurich', currency: 'CHF', symbol: 'CHF ' },
                 { id: 'singapore', name: 'Singapore', currency: 'SGD', symbol: 'S$' },
                 { id: 'dubai', name: 'Dubai', currency: 'USD', symbol: '$' },
+                { id: 'riyadh', name: 'Saudi Arabia', currency: 'USD', symbol: '$' },
                 { id: 'cologne', name: 'Cologne', currency: 'EUR', symbol: '€' }
             ],
             phillips: [
@@ -786,7 +789,7 @@
 
         // ===========================================
         // PREMIUM RATE CONFIGURATION
-        // Last updated: February 2025
+        // Last updated: February 2026
         // ===========================================
         const PREMIUM_RATES = {
             christies: {
@@ -806,20 +809,21 @@
                 }
             },
             sothebys: {
-                // As of 17 February 2025
-                // Source: Sotheby's PDF
+                // As of 13 February 2026
+                // Source: https://www.sothebys.com/en/docs/pdf/st-262561601-bp-chart-pdf-updates-feb-4.pdf
                 standard: {
-                    rates: [0.27, 0.22, 0.15],
+                    rates: [0.28, 0.22, 0.15],
                     thresholds: {
-                        new_york: [1000000, 8000000],
-                        london: [800000, 6000000],
-                        paris: [850000, 7000000],
-                        milan: [850000, 7000000],       // Same as Paris
-                        hong_kong: [7500000, 60000000],
-                        zurich: [1000000, 8000000],
-                        singapore: [1500000, 10000000],
-                        dubai: [1000000, 8000000],      // Same as New York
-                        cologne: [850000, 7000000]      // Same as Paris
+                        new_york: [2000000, 8000000],
+                        london: [1500000, 6000000],
+                        paris: [1750000, 7000000],
+                        milan: [1750000, 7000000],       // Same as Paris
+                        hong_kong: [15000000, 60000000],
+                        zurich: [1600000, 7000000],
+                        singapore: [2600000, 10000000],
+                        dubai: [2000000, 8000000],       // Same as New York
+                        riyadh: [2000000, 8000000],      // Same as New York
+                        cologne: [1750000, 7000000]      // Same as Paris
                     }
                 }
             },
