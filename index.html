@@ -663,6 +663,7 @@
                             <th>Hammer Price</th>
                             <th>Buyer's Premium</th>
                             <th>Premium %</th>
+                            <th>Total</th>
                         </tr>
                     </thead>
                     <tbody id="increment-results-body">
@@ -1141,11 +1142,13 @@
             // Step 0: base amount
             const basePremium = calculatePremium(currentHammer, house, locationId, category);
             const baseRate = (basePremium / currentHammer * 100).toFixed(2);
+            const baseTotal = currentHammer + basePremium;
             lastIncrementResults.push({
                 step: 0,
                 hammer: currentHammer,
                 premium: basePremium,
-                rate: baseRate
+                rate: baseRate,
+                total: baseTotal
             });
             let row = document.createElement('tr');
             row.innerHTML = `
@@ -1153,6 +1156,7 @@
                 <td class="amount">${formatCurrency(currentHammer)}</td>
                 <td class="premium">${formatCurrency(basePremium)}</td>
                 <td>${baseRate}%</td>
+                <td class="total">${formatCurrency(baseTotal)}</td>
             `;
             tbody.appendChild(row);
 
@@ -1166,12 +1170,14 @@
 
                 const premium = calculatePremium(currentHammer, house, locationId, category);
                 const rate = (premium / currentHammer * 100).toFixed(2);
+                const stepTotal = currentHammer + premium;
 
                 lastIncrementResults.push({
                     step: i,
                     hammer: currentHammer,
                     premium: premium,
-                    rate: rate
+                    rate: rate,
+                    total: stepTotal
                 });
 
                 const stepRow = document.createElement('tr');
@@ -1180,6 +1186,7 @@
                     <td class="amount">${formatCurrency(currentHammer)}</td>
                     <td class="premium">${formatCurrency(premium)}</td>
                     <td>${rate}%</td>
+                    <td class="total">${formatCurrency(stepTotal)}</td>
                 `;
                 tbody.appendChild(stepRow);
             }
